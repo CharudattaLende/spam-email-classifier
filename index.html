@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Email Classifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #0b0b14;
+            font-family: 'DM Sans', sans-serif;
+            color: #e8e6f0;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .blob1 {
+            position: fixed;
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99, 70, 220, 0.28) 0%, transparent 70%);
+            top: -100px;
+            left: -80px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .blob2 {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(130, 80, 255, 0.18) 0%, transparent 70%);
+            bottom: -60px;
+            right: -60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wrap {
+            position: relative;
+            z-index: 1;
+            max-width: 560px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(99, 70, 220, 0.18);
+            border: 1px solid rgba(140, 100, 255, 0.38);
+            border-radius: 99px;
+            padding: 4px 14px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #c4b0ff;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 1.2rem;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #8b5cf6;
+            box-shadow: 0 0 7px #8b5cf6;
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #fff 25%, #c4b0ff 65%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.7rem;
+        }
+
+        .sub {
+            font-size: 0.9rem;
+            color: #8e8aa5;
+            max-width: 380px;
+            line-height: 1.65;
+            font-weight: 300;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 18px;
+            padding: 1.6rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(140, 100, 255, 0.55), transparent);
+        }
+
+        .lbl {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #6b6880;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .tog-btn {
+            flex: 1;
+            padding: 7px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: transparent;
+            color: #6b6880;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .tog-btn:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .tog-btn.active {
+            background: rgba(99, 70, 220, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+            color: #c4b0ff;
+        }
+
+        textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #e8e6f0;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            padding: 12px 14px;
+            height: 110px;
+            resize: none;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        textarea::placeholder {
+            color: #3f3c52;
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 12px;
+            background: linear-gradient(135deg, #6346dc, #8b5cf6 60%, #a78bfa);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            padding: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 22px rgba(99, 70, 220, 0.38);
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            box-shadow: 0 6px 28px rgba(99, 70, 220, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .result-spam {
+            background: rgba(220, 53, 80, 0.12);
+            border: 1px solid rgba(220, 53, 80, 0.35);
+            border-radius: 12px;
+            padding: 1.1rem 1.3rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.4s ease;
+        }
+
+        .result-safe {
+            background: rgba(34, 197, 120, 0.10);
+            border: 1px solid rgba(34, 197, 120, 0.3);
+            border-radius: 12px;
+            padding: 1.1rem 1.3rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .r-icon {
+            font-size: 1.6rem;
+            flex-shrink: 0;
+        }
+
+        .r-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .r-desc {
+            font-size: 0.76rem;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .result-spam .r-title,
+        .result-spam .r-desc {
+            color: #ff6b82;
+        }
+
+        .result-safe .r-title,
+        .result-safe .r-desc {
+            color: #34c578;
+        }
+
+        .error-msg {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 10px;
+            padding: 0.9rem 1.2rem;
+            color: #fbbf24;
+            font-size: 0.82rem;
+            margin-top: 0.8rem;
+            animation: slideIn 0.4s ease;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.4rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .s-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #c4b0ff;
+            text-align: center;
+        }
+
+        .s-lbl {
+            font-size: 0.68rem;
+            color: #5a5770;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 1.8rem;
+            font-size: 0.72rem;
+            color: #3e3c52;
+            letter-spacing: 0.04em;
+        }
+
+        .footer span {
+            color: #7c5df0;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="blob1"></div>
+    <div class="blob2"></div>
+
+    <div class="wrap">
+        <div class="header">
+            <div class="badge"><span class="dot"></span> AI-Powered · Instant Detection</div>
+            <h1>Is that email<br>spam or legit?</h1>
+            <p class="sub">Paste any message and our trained classifier tells you instantly — no guesswork.</p>
+        </div>
+
+        <div class="card">
+            <label class="lbl">✦ Your message</label>
+            <div class="toggle">
+                <button class="tog-btn active" onclick="setDemo('spam')">Try spam example</button>
+                <button class="tog-btn" onclick="setDemo('safe')">Try safe example</button>
+            </div>
+            <textarea id="msg" placeholder='Paste email content here…'></textarea>
+            <button class="btn" onclick="analyse()">Analyse Message →</button>
+            <div id="result"></div>
+
+            <div class="stats">
+                <div>
+                    <div class="s-num">5,574</div>
+                    <div class="s-lbl">Trained on</div>
+                </div>
+                <div>
+                    <div class="s-num">~98%</div>
+                    <div class="s-lbl">Accuracy</div>
+                </div>
+                <div>
+                    <div class="s-num">Naive Bayes</div>
+                    <div class="s-lbl">Model</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">🛡️ &nbsp;Spam Email Classifier&nbsp; · © 2026</div>
+    </div>
+
+    <script>
+        const spamMsg = "Congratulations! You've been selected as our lucky winner. Click NOW to claim your FREE iPhone 15 Pro. Limited time offer — expires in 24 hours!";
+        const safeMsg = "Hi team, just a reminder that our weekly sync is tomorrow at 3pm. Please review the agenda doc before joining. See you there!";
+
+        function setDemo(type) {
+            document.getElementById('msg').value = type === 'spam' ? spamMsg : safeMsg;
+            document.querySelectorAll('.tog-btn').forEach((b, i) =>
+                b.classList.toggle('active', type === 'spam' ? i === 0 : i === 1)
+            );
+            document.getElementById('result').innerHTML = '';
+        }
+
+        async function analyse() {
+            const val = document.getElementById('msg').value.trim();
+            const resultDiv = document.getElementById('result');
+
+            if (!val) {
+                resultDiv.innerHTML = '⚠️ Please paste a message first.';
+                resultDiv.className = 'error-msg';
+                return;
+            }
+
+            // Show loading state
+            const btn = document.querySelector('.btn');
+            const originalText = btn.textContent;
+            btn.textContent = '⏳ Analysing...';
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: val })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.is_spam) {
+                        resultDiv.innerHTML = `
+                            <div class="result-spam">
+                                <div class="r-icon">🚨</div>
+                                <div>
+                                    <div class="r-title">Spam Detected</div>
+                                    <div class="r-desc">${data.message}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="result-safe">
+                                <div class="r-icon">✅</div>
+                                <div>
+                                    <div class="r-title">Looks Legitimate</div>
+                                    <div class="r-desc">${data.message}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    resultDiv.innerHTML = `⚠️ ${data.error}`;
+                    resultDiv.className = 'error-msg';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '❌ Error connecting to server. Please try again.';
+                resultDiv.className = 'error-msg';
+                console.error('Error:', error);
+            } finally {
+                btn.textContent = originalText;
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // Set initial demo
+        setDemo('spam');
+
+        // Allow Enter key to submit
+        document.getElementById('msg').addEventListener('keydown', function (e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                analyse();
+            }
+        });
+    </script>
+</body>
+</html>
